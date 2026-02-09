@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Your Way To My Heart 💕</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a0a10;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+        }
+        #gameContainer {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            border: 4px solid #FF69B4;
+            box-shadow: 0 0 20px #FF69B4, 0 0 40px #FF69B4, inset 0 0 20px rgba(255, 105, 180, 0.3);
+            border-radius: 8px;
+        }
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+        #titleScreen, #cardScreen, #celebrationScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(26, 10, 16, 0.95);
+        }
+        .hidden { display: none !important; }
+        h1 {
+            color: #FF69B4;
+            font-size: 18px;
+            text-align: center;
+            text-shadow: 0 0 10px #FF69B4, 0 0 20px #FF69B4;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        h2 {
+            color: #FFF5E1;
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+        .startBtn {
+            background: linear-gradient(180deg, #FF69B4 0%, #FF1493 100%);
+            color: #FFF5E1;
+            border: none;
+            padding: 15px 40px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            cursor: pointer;
+            pointer-events: auto;
+            border-radius: 8px;
+            box-shadow: 0 0 15px #FF69B4, 0 0 30px rgba(255, 105, 180, 0.5);
+            transition: all 0.3s ease;
+        }
+        .startBtn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px #FF69B4, 0 0 50px rgba(255, 105, 180, 0.8);
+        }
+        #roseMessage {
+            position: absolute;
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            color: #FFF5E1;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 10px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.8);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 100;
+        }
+        #roseCounter {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #FF69B4;
+            font-size: 10px;
+            text-shadow: 0 0 10px #FF69B4;
+        }
+        .floatingHeart {
+            position: absolute;
+            color: #FF69B4;
+            opacity: 0.6;
+            animation: float 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+        <div id="roseCounter"></div>
+        <div id="roseMessage"></div>
+        <div id="titleScreen">
+            <h1>Find Your Way<br>To My Heart</h1>
+            <h2>✨ Janak ✨</h2>
+            <button class="startBtn" onclick="startGame()">START</button>
+        </div>
+        <div id="cardScreen" class="hidden">
+            <h1>💝 You Found<br>My Heart! 💝</h1>
+            <h2>Happy Valentine's Day!</h2>
+            <button class="startBtn" onclick="showCelebration()">Open Card</button>
+        </div>
+        <div id="celebrationScreen" class="hidden">
+            <h1>💕 I Love You<br>Janak! 💕</h1>
+            <h2>Forever & Always</h2>
+            <button class="startBtn" onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const TILE_SIZE = 24;
+const GRID_W = 25;
+const GRID_H = 25;
+
+// Game state
+let gameState = 'title';
+let player = { x: 1, y: 1, dir: 'down', frame: 0, moving: false, targetX: 1, targetY: 1 };
+let roses = [];
+let rosesCollected = 0;
+let goalPos = { x: 23, y: 23 };
+let animationFrame = 0;
+let lastTime = 0;
+let keys = {};
+
+// Rose messages
+const roseMessages = [
+    "You make me smile 💕", "My favorite person ✨", "You're so cute! 🥰",
+    "I'm lucky to have you 💖", "You light up my world 🌟", "Forever yours 💝",
+    "My heart is yours 💗", "You're amazing, Janak! 💕", "I love your laugh 😊",
+    "Best boyfriend ever! 💖"
+];
+
+// Maze layout (1 = wall, 0 = path, 2 = rose, 3 = goal)
+const mazeTemplate = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+    [1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
+    [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+    [1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0,1,1,1,1,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
+    [1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
+    [1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+    [1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1],
+    [1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+    [1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
+    [1,1,1,1,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+    [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+    [1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1],
+    [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+];
+
+let maze = [];
+
+// Rose positions in the maze
+const rosePositions = [
+    {x: 3, y: 3}, {x: 11, y: 5}, {x: 21, y: 3}, {x: 5, y: 11},
+    {x: 19, y: 11}, {x: 3, y: 19}, {x: 11, y: 17}, {x: 21, y: 19},
+    {x: 9, y: 9}, {x: 15, y: 15}
+];
+
+function initMaze() {
+    maze = mazeTemplate.map(row => [...row]);
+    roses = rosePositions.map((pos, i) => ({ ...pos, collected: false, id: i }));
+    player = { x: 1, y: 1, dir: 'down', frame: 0, moving: false, targetX: 1, targetY: 1 };
+    rosesCollected = 0;
+    updateRoseCounter();
+}
+
+function updateRoseCounter() {
+    document.getElementById('roseCounter').textContent = `🌹 ${rosesCollected}/${roses.length}`;
+}
+
+// Draw neon glowing wall tile
+function drawWall(x, y) {
+    const px = x * TILE_SIZE;
+    const py = y * TILE_SIZE;
+
+    // Outer glow
+    ctx.shadowColor = '#FF69B4';
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = '#FF69B4';
+    ctx.fillRect(px + 2, py + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+
+    // Inner highlight
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#FFB6C1';
+    ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+
+    // Core
+    ctx.fillStyle = '#FF69B4';
+    ctx.fillRect(px + 6, py + 6, TILE_SIZE - 12, TILE_SIZE - 12);
+}
+
+// Draw pixel rose
+function drawRose(x, y) {
+    const px = x * TILE_SIZE + TILE_SIZE / 2;
+    const py = y * TILE_SIZE + TILE_SIZE / 2;
+    const pulse = Math.sin(animationFrame * 0.1) * 2;
+
+    ctx.shadowColor = '#FF4D6D';
+    ctx.shadowBlur = 10 + pulse;
+
+    // Petals
+    ctx.fillStyle = '#FF4D6D';
+    ctx.beginPath();
+    ctx.arc(px, py - 2, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(px - 4, py + 2, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(px + 4, py + 2, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Stem
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#228B22';
+    ctx.fillRect(px - 1, py + 5, 2, 6);
+}
+
+// Draw glowing goal heart
+function drawGoalHeart(x, y) {
+    const px = x * TILE_SIZE + TILE_SIZE / 2;
+    const py = y * TILE_SIZE + TILE_SIZE / 2;
+    const pulse = Math.sin(animationFrame * 0.15) * 3;
+
+    ctx.shadowColor = '#FF1744';
+    ctx.shadowBlur = 20 + pulse;
+    ctx.fillStyle = '#FF1744';
+
+    ctx.beginPath();
+    ctx.moveTo(px, py + 6);
+    ctx.bezierCurveTo(px - 10, py - 5, px - 10, py - 10, px, py - 5);
+    ctx.bezierCurveTo(px + 10, py - 10, px + 10, py - 5, px, py + 6);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+}
+
+// Draw Janak character (16x20 pixel sprite)
+function drawJanak(x, y, dir, frame) {
+    const px = x * TILE_SIZE + 4;
+    const py = y * TILE_SIZE + 2;
+    const p = 1; // pixel size
+
+    ctx.shadowBlur = 0;
+
+    // Colors
+    const skin = '#C68642';  // Medium brown skin
+    const hair = '#1a1a1a'; // Black fluffy hair
+    const hoodie = '#2a2a2a'; // Black hoodie
+    const jeans = '#1f1f1f'; // Black jeans
+
+    // Draw based on direction
+    // Hair (fluffy curly - top of head)
+    ctx.fillStyle = hair;
+    if (dir === 'up') {
+        // Back of head - more hair visible
+        for (let i = 2; i < 14; i++) {
+            ctx.fillRect(px + i * p, py, p, p * 3);
+        }
+        ctx.fillRect(px + 3 * p, py + p, p * 10, p * 4);
+    } else {
+        // Front/side views - curly hair
+        ctx.fillRect(px + 3 * p, py, p * 10, p * 2);
+        ctx.fillRect(px + 2 * p, py + p, p * 12, p * 2);
+        ctx.fillRect(px + 2 * p, py + 3 * p, p * 2, p * 2);
+        ctx.fillRect(px + 12 * p, py + 3 * p, p * 2, p * 2);
+        // Curly bits
+        ctx.fillRect(px + p, py + 2 * p, p * 2, p);
+        ctx.fillRect(px + 13 * p, py + 2 * p, p * 2, p);
+    }
+
+    // Face
+    ctx.fillStyle = skin;
+    if (dir === 'up') {
+        ctx.fillRect(px + 4 * p, py + 5 * p, p * 8, p * 3);
+    } else {
+        ctx.fillRect(px + 4 * p, py + 4 * p, p * 8, p * 4);
+        // Eyes (not visible from back)
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(px + 5 * p, py + 5 * p, p * 2, p * 2);
+        ctx.fillRect(px + 9 * p, py + 5 * p, p * 2, p * 2);
+    }
+
+    // Hoodie body
+    ctx.fillStyle = hoodie;
+    ctx.fillRect(px + 3 * p, py + 8 * p, p * 10, p * 7);
+    // Hood outline
+    ctx.fillRect(px + 2 * p, py + 8 * p, p, p * 3);
+    ctx.fillRect(px + 13 * p, py + 8 * p, p, p * 3);
+
+    // Arms
+    const armOffset = frame % 2 === 0 ? 0 : p;
+    if (dir === 'left') {
+        ctx.fillRect(px + 2 * p, py + 9 * p - armOffset, p * 2, p * 4);
+        ctx.fillRect(px + 12 * p, py + 9 * p + armOffset, p * 2, p * 4);
+    } else if (dir === 'right') {
+        ctx.fillRect(px + 2 * p, py + 9 * p + armOffset, p * 2, p * 4);
+        ctx.fillRect(px + 12 * p, py + 9 * p - armOffset, p * 2, p * 4);
+    } else {
+        ctx.fillRect(px + 2 * p, py + 9 * p, p * 2, p * 4);
+        ctx.fillRect(px + 12 * p, py + 9 * p, p * 2, p * 4);
+    }
+
+    // Jeans
+    ctx.fillStyle = jeans;
+    ctx.fillRect(px + 4 * p, py + 15 * p, p * 3, p * 5);
+    ctx.fillRect(px + 9 * p, py + 15 * p, p * 3, p * 5);
+
+    // Walking animation - leg movement
+    if (player.moving && frame % 2 === 1) {
+        if (dir === 'left' || dir === 'right') {
+            ctx.fillRect(px + 4 * p, py + 15 * p, p * 3, p * 4);
+            ctx.fillRect(px + 9 * p, py + 16 * p, p * 3, p * 4);
+        } else if (dir === 'up' || dir === 'down') {
+            ctx.fillRect(px + 5 * p, py + 15 * p, p * 2, p * 5);
+            ctx.fillRect(px + 9 * p, py + 15 * p, p * 2, p * 5);
+        }
+    }
+
+    // Shoes
+    ctx.fillStyle = '#111';
+    ctx.fillRect(px + 3 * p, py + 19 * p, p * 4, p);
+    ctx.fillRect(px + 9 * p, py + 19 * p, p * 4, p);
+}
+
+// Show rose message popup
+function showRoseMessage(index) {
+    const msgEl = document.getElementById('roseMessage');
+    msgEl.textContent = roseMessages[index % roseMessages.length];
+    msgEl.style.opacity = '1';
+    msgEl.style.top = '50%';
+    msgEl.style.left = '50%';
+    msgEl.style.transform = 'translate(-50%, -50%)';
+
+    setTimeout(() => {
+        msgEl.style.opacity = '0';
+    }, 2000);
+}
+
+// Handle input
+function handleInput() {
+    if (!player.moving && gameState === 'playing') {
+        let newX = player.x;
+        let newY = player.y;
+        let newDir = player.dir;
+
+        if (keys['ArrowUp'] || keys['KeyW']) { newY--; newDir = 'up'; }
+        else if (keys['ArrowDown'] || keys['KeyS']) { newY++; newDir = 'down'; }
+        else if (keys['ArrowLeft'] || keys['KeyA']) { newX--; newDir = 'left'; }
+        else if (keys['ArrowRight'] || keys['KeyD']) { newX++; newDir = 'right'; }
+
+        player.dir = newDir;
+
+        // Check if can move
+        if (newX >= 0 && newX < GRID_W && newY >= 0 && newY < GRID_H && maze[newY][newX] !== 1) {
+            player.targetX = newX;
+            player.targetY = newY;
+            player.moving = true;
+        }
+    }
+}
+
+// Update game state
+function update() {
+    if (gameState !== 'playing') return;
+
+    // Smooth movement
+    if (player.moving) {
+        const speed = 0.15;
+        const dx = player.targetX - player.x;
+        const dy = player.targetY - player.y;
+
+        if (Math.abs(dx) > 0.05) player.x += dx * speed;
+        else player.x = player.targetX;
+
+        if (Math.abs(dy) > 0.05) player.y += dy * speed;
+        else player.y = player.targetY;
+
+        if (player.x === player.targetX && player.y === player.targetY) {
+            player.moving = false;
+            player.frame = (player.frame + 1) % 2;
+
+            // Check rose collection
+            const gridX = Math.round(player.x);
+            const gridY = Math.round(player.y);
+            roses.forEach((rose, i) => {
+                if (!rose.collected && rose.x === gridX && rose.y === gridY) {
+                    rose.collected = true;
+                    rosesCollected++;
+                    updateRoseCounter();
+                    showRoseMessage(rosesCollected - 1);
+                }
+            });
+
+            // Check goal
+            if (gridX === goalPos.x && gridY === goalPos.y) {
+                gameState = 'card';
+                document.getElementById('cardScreen').classList.remove('hidden');
+            }
+        }
+    }
+
+    handleInput();
+}
+
+// Draw everything
+function draw() {
+    // Clear with dark background
+    ctx.fillStyle = '#1a0a10';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (gameState === 'title') return;
+
+    // Draw maze
+    for (let y = 0; y < GRID_H; y++) {
+        for (let x = 0; x < GRID_W; x++) {
+            if (maze[y][x] === 1) {
+                drawWall(x, y);
+            }
+        }
+    }
+
+    // Draw roses
+    roses.forEach(rose => {
+        if (!rose.collected) {
+            drawRose(rose.x, rose.y);
+        }
+    });
+
+    // Draw goal heart
+    drawGoalHeart(goalPos.x, goalPos.y);
+
+    // Draw player
+    drawJanak(player.x, player.y, player.dir, player.frame);
+}
+
+// Main game loop
+function gameLoop(timestamp) {
+    const deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+
+    animationFrame++;
+
+    update();
+    draw();
+
+    requestAnimationFrame(gameLoop);
+}
+
+// Game control functions
+function startGame() {
+    document.getElementById('titleScreen').classList.add('hidden');
+    initMaze();
+    gameState = 'playing';
+}
+
+function showCelebration() {
+    document.getElementById('cardScreen').classList.add('hidden');
+    document.getElementById('celebrationScreen').classList.remove('hidden');
+    gameState = 'celebration';
+}
+
+function restartGame() {
+    document.getElementById('celebrationScreen').classList.add('hidden');
+    document.getElementById('titleScreen').classList.remove('hidden');
+    gameState = 'title';
+}
+
+// Event listeners
+document.addEventListener('keydown', (e) => {
+    keys[e.code] = true;
+    e.preventDefault();
+});
+
+document.addEventListener('keyup', (e) => {
+    keys[e.code] = false;
+});
+
+// Create floating hearts for title screen
+function createFloatingHearts() {
+    const container = document.getElementById('titleScreen');
+    for (let i = 0; i < 15; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'floatingHeart';
+        heart.textContent = '💕';
+        heart.style.left = Math.random() * 100 + '%';
+        heart.style.top = Math.random() * 100 + '%';
+        heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+        heart.style.animationDelay = (Math.random() * 4) + 's';
+        container.appendChild(heart);
+    }
+}
+
+// Initialize
+createFloatingHearts();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
+
