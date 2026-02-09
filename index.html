@@ -115,6 +115,147 @@
             0%, 100% { transform: translateY(0) rotate(0deg); }
             50% { transform: translateY(-20px) rotate(10deg); }
         }
+
+        /* Valentine Card Styles */
+        #cardScreen {
+            background: radial-gradient(ellipse at center, #2a1020 0%, #1a0a10 100%);
+        }
+        .card-container {
+            background: linear-gradient(135deg, #2a1525 0%, #1a0a10 100%);
+            border: 4px solid #FF69B4;
+            border-radius: 20px;
+            padding: 40px 60px;
+            box-shadow: 0 0 30px #FF69B4, 0 0 60px rgba(255, 105, 180, 0.5), inset 0 0 30px rgba(255, 105, 180, 0.1);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        .card-title {
+            color: #FF69B4;
+            font-size: 16px;
+            text-shadow: 0 0 10px #FF69B4, 0 0 20px #FF69B4, 0 0 30px #FF69B4;
+            margin-bottom: 10px;
+            line-height: 1.8;
+        }
+        .card-question {
+            color: #FFF5E1;
+            font-size: 14px;
+            margin-bottom: 40px;
+            text-shadow: 0 0 10px rgba(255, 245, 225, 0.5);
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            min-height: 60px;
+        }
+        .yes-btn {
+            background: linear-gradient(180deg, #FF69B4 0%, #FF1493 100%);
+            color: #FFF5E1;
+            border: none;
+            padding: 20px 50px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            cursor: pointer;
+            pointer-events: auto;
+            border-radius: 12px;
+            box-shadow: 0 0 20px #FF69B4, 0 0 40px rgba(255, 105, 180, 0.6);
+            transition: all 0.3s ease;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+        .yes-btn:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 30px #FF69B4, 0 0 60px rgba(255, 105, 180, 0.9);
+        }
+        @keyframes sparkle {
+            0%, 100% { box-shadow: 0 0 20px #FF69B4, 0 0 40px rgba(255, 105, 180, 0.6); }
+            50% { box-shadow: 0 0 30px #FFB6C1, 0 0 60px rgba(255, 182, 193, 0.8), 0 0 80px rgba(255, 105, 180, 0.4); }
+        }
+        .no-btn {
+            background: #444;
+            color: #888;
+            border: none;
+            padding: 10px 20px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            cursor: pointer;
+            pointer-events: auto;
+            border-radius: 6px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: absolute;
+        }
+        .no-btn:hover {
+            background: #555;
+        }
+        .no-btn.escaping {
+            animation: wobble 0.3s ease;
+        }
+        @keyframes wobble {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-15deg); }
+            75% { transform: rotate(15deg); }
+        }
+        .escape-message {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #FFB6C1;
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+        .escape-message.visible {
+            opacity: 1;
+        }
+        .poof {
+            position: absolute;
+            pointer-events: none;
+            animation: poofAnim 0.5s ease-out forwards;
+        }
+        @keyframes poofAnim {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        /* Celebration Screen */
+        #celebrationScreen {
+            background: radial-gradient(ellipse at center, #2a1020 0%, #1a0a10 100%);
+        }
+        .celebration-title {
+            color: #FF69B4;
+            font-size: 20px;
+            text-shadow: 0 0 15px #FF69B4, 0 0 30px #FF69B4, 0 0 45px #FF69B4;
+            margin-bottom: 20px;
+            line-height: 1.8;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); text-shadow: 0 0 15px #FF69B4, 0 0 30px #FF69B4; }
+            50% { transform: scale(1.05); text-shadow: 0 0 25px #FFB6C1, 0 0 50px #FF69B4, 0 0 75px #FF69B4; }
+        }
+        .celebration-subtitle {
+            color: #FFF5E1;
+            font-size: 12px;
+            margin-bottom: 40px;
+            text-shadow: 0 0 10px rgba(255, 245, 225, 0.5);
+        }
+        .confetti {
+            position: absolute;
+            pointer-events: none;
+        }
+        .heart-float {
+            position: absolute;
+            animation: floatUp 4s ease-out forwards;
+            pointer-events: none;
+            font-size: 24px;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(-300px) rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -128,13 +269,20 @@
             <button class="startBtn" onclick="startGame()">START</button>
         </div>
         <div id="cardScreen" class="hidden">
-            <h1>💝 You Found<br>My Heart! 💝</h1>
-            <h2>Happy Valentine's Day!</h2>
-            <button class="startBtn" onclick="showCelebration()">Open Card</button>
+            <div class="card-container">
+                <h1 class="card-title">💕 Will You Be My 💕</h1>
+                <h2 class="card-question">Valentine?</h2>
+                <div class="button-container">
+                    <button class="yes-btn" onclick="sayYes()">✨ YES ✨</button>
+                    <button class="no-btn" id="noBtn">no</button>
+                </div>
+                <div class="escape-message" id="escapeMessage"></div>
+            </div>
         </div>
         <div id="celebrationScreen" class="hidden">
-            <h1>💕 I Love You<br>Janak! 💕</h1>
-            <h2>Forever & Always</h2>
+            <div id="confettiContainer"></div>
+            <h1 class="celebration-title">💕 I Love You<br>Janak! 💕</h1>
+            <h2 class="celebration-subtitle">Forever & Always ✨</h2>
             <button class="startBtn" onclick="restartGame()">Play Again</button>
         </div>
     </div>
@@ -503,12 +651,242 @@ function showCelebration() {
     document.getElementById('cardScreen').classList.add('hidden');
     document.getElementById('celebrationScreen').classList.remove('hidden');
     gameState = 'celebration';
+    launchConfetti();
+    createCelebrationHearts();
 }
 
 function restartGame() {
     document.getElementById('celebrationScreen').classList.add('hidden');
     document.getElementById('titleScreen').classList.remove('hidden');
     gameState = 'title';
+    escapeCount = 0;
+    resetNoButton();
+}
+
+// ==========================================
+// ESCAPING NO BUTTON LOGIC
+// ==========================================
+
+let escapeCount = 0;
+let noButtonVisible = true;
+const ESCAPE_DISTANCE = 80; // Pixels - detect when mouse is close
+
+function initEscapingButton() {
+    const noBtn = document.getElementById('noBtn');
+    const cardScreen = document.getElementById('cardScreen');
+
+    // Position the no button initially
+    resetNoButton();
+
+    // Track mouse movement on card screen
+    cardScreen.addEventListener('mousemove', handleMouseProximity);
+
+    // Also handle touch for mobile
+    cardScreen.addEventListener('touchmove', (e) => {
+        const touch = e.touches[0];
+        handleMouseProximity({ clientX: touch.clientX, clientY: touch.clientY });
+    });
+}
+
+function resetNoButton() {
+    const noBtn = document.getElementById('noBtn');
+    noBtn.style.right = '60px';
+    noBtn.style.top = '50%';
+    noBtn.style.transform = 'translateY(-50%)';
+    noBtn.style.left = 'auto';
+    noBtn.style.display = 'block';
+    noBtn.style.fontSize = '8px';
+    noBtn.style.padding = '10px 20px';
+    noBtn.style.opacity = '1';
+    noButtonVisible = true;
+    document.getElementById('escapeMessage').classList.remove('visible');
+}
+
+function handleMouseProximity(e) {
+    if (!noButtonVisible || gameState !== 'card') return;
+
+    const noBtn = document.getElementById('noBtn');
+    const rect = noBtn.getBoundingClientRect();
+    const btnCenterX = rect.left + rect.width / 2;
+    const btnCenterY = rect.top + rect.height / 2;
+
+    const distance = Math.sqrt(
+        Math.pow(e.clientX - btnCenterX, 2) +
+        Math.pow(e.clientY - btnCenterY, 2)
+    );
+
+    if (distance < ESCAPE_DISTANCE) {
+        escapeButton();
+    }
+}
+
+function escapeButton() {
+    const noBtn = document.getElementById('noBtn');
+    const cardScreen = document.getElementById('cardScreen');
+    const cardRect = cardScreen.getBoundingClientRect();
+
+    escapeCount++;
+
+    // Add wobble animation
+    noBtn.classList.add('escaping');
+    setTimeout(() => noBtn.classList.remove('escaping'), 300);
+
+    // Progressive behavior
+    updateEscapeMessage();
+
+    // After 5 escapes: button gets smaller
+    if (escapeCount >= 5) {
+        const scale = Math.max(0.5, 1 - (escapeCount - 5) * 0.1);
+        noBtn.style.fontSize = `${8 * scale}px`;
+        noBtn.style.padding = `${10 * scale}px ${20 * scale}px`;
+    }
+
+    // After 10 escapes: button disappears with poof
+    if (escapeCount >= 10) {
+        createPoofEffect(noBtn);
+        noBtn.style.display = 'none';
+        noButtonVisible = false;
+        return;
+    }
+
+    // Calculate new random position within bounds
+    const padding = 60;
+    const btnWidth = noBtn.offsetWidth;
+    const btnHeight = noBtn.offsetHeight;
+
+    const maxX = cardRect.width - btnWidth - padding;
+    const maxY = cardRect.height - btnHeight - padding;
+
+    const newX = padding + Math.random() * maxX;
+    const newY = padding + Math.random() * maxY;
+
+    // Apply new position with slight rotation
+    const rotation = (Math.random() - 0.5) * 20;
+    noBtn.style.left = `${newX}px`;
+    noBtn.style.top = `${newY}px`;
+    noBtn.style.right = 'auto';
+    noBtn.style.transform = `rotate(${rotation}deg)`;
+}
+
+function updateEscapeMessage() {
+    const msgEl = document.getElementById('escapeMessage');
+    let message = '';
+
+    if (escapeCount >= 7) {
+        message = 'Please? 💕';
+    } else if (escapeCount >= 5) {
+        message = "I'm getting smaller! 🥺";
+    } else if (escapeCount >= 3) {
+        message = 'Are you sure? 🥺';
+    }
+
+    if (message) {
+        msgEl.textContent = message;
+        msgEl.classList.add('visible');
+    }
+}
+
+function createPoofEffect(element) {
+    const rect = element.getBoundingClientRect();
+    const cardScreen = document.getElementById('cardScreen');
+
+    // Create sparkle particles
+    const particles = ['✨', '💫', '⭐', '💕', '💖'];
+    for (let i = 0; i < 8; i++) {
+        const poof = document.createElement('div');
+        poof.className = 'poof';
+        poof.textContent = particles[Math.floor(Math.random() * particles.length)];
+        poof.style.left = `${rect.left - cardScreen.getBoundingClientRect().left + rect.width/2}px`;
+        poof.style.top = `${rect.top - cardScreen.getBoundingClientRect().top + rect.height/2}px`;
+        poof.style.fontSize = `${12 + Math.random() * 10}px`;
+        cardScreen.appendChild(poof);
+
+        // Animate outward
+        const angle = (i / 8) * Math.PI * 2;
+        const distance = 30 + Math.random() * 20;
+        poof.animate([
+            { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+            { transform: `translate(${Math.cos(angle) * distance - 50}%, ${Math.sin(angle) * distance - 50}%) scale(0)`, opacity: 0 }
+        ], { duration: 500, easing: 'ease-out' });
+
+        setTimeout(() => poof.remove(), 500);
+    }
+
+    // Show final message
+    const msgEl = document.getElementById('escapeMessage');
+    msgEl.textContent = "Fine, I'll just love you forever! 💕";
+    msgEl.classList.add('visible');
+}
+
+// ==========================================
+// YES BUTTON AND CELEBRATION
+// ==========================================
+
+function sayYes() {
+    gameState = 'celebration';
+    showCelebration();
+}
+
+function launchConfetti() {
+    const container = document.getElementById('confettiContainer');
+    container.innerHTML = '';
+
+    const colors = ['#FF69B4', '#FFB6C1', '#FF1493', '#FF4D6D', '#FFF5E1', '#FF6B9D'];
+    const shapes = ['❤️', '💕', '💖', '💗', '✨', '🌸'];
+
+    // Create confetti particles
+    for (let i = 0; i < 100; i++) {
+        setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+
+            // Randomly choose between shape emoji or colored square
+            if (Math.random() > 0.5) {
+                confetti.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+                confetti.style.fontSize = `${10 + Math.random() * 15}px`;
+            } else {
+                confetti.style.width = `${5 + Math.random() * 10}px`;
+                confetti.style.height = `${5 + Math.random() * 10}px`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+            }
+
+            confetti.style.left = `${Math.random() * 100}%`;
+            confetti.style.top = '-20px';
+
+            container.appendChild(confetti);
+
+            // Animate falling
+            const duration = 2000 + Math.random() * 2000;
+            const endX = (Math.random() - 0.5) * 200;
+
+            confetti.animate([
+                { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                { transform: `translateY(${window.innerHeight + 50}px) translateX(${endX}px) rotate(${360 + Math.random() * 360}deg)`, opacity: 0.8 }
+            ], { duration: duration, easing: 'ease-in' });
+
+            setTimeout(() => confetti.remove(), duration);
+        }, i * 30);
+    }
+}
+
+function createCelebrationHearts() {
+    const celebrationScreen = document.getElementById('celebrationScreen');
+
+    // Create floating hearts
+    for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+            const heart = document.createElement('div');
+            heart.className = 'heart-float';
+            heart.textContent = ['💕', '💖', '💗', '❤️', '💝'][Math.floor(Math.random() * 5)];
+            heart.style.left = `${10 + Math.random() * 80}%`;
+            heart.style.bottom = '0';
+            heart.style.fontSize = `${20 + Math.random() * 20}px`;
+            celebrationScreen.appendChild(heart);
+
+            setTimeout(() => heart.remove(), 4000);
+        }, i * 200);
+    }
 }
 
 // Event listeners
@@ -536,8 +914,25 @@ function createFloatingHearts() {
     }
 }
 
+// Create floating hearts for card screen
+function createCardFloatingHearts() {
+    const container = document.getElementById('cardScreen');
+    for (let i = 0; i < 12; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'floatingHeart';
+        heart.textContent = ['💕', '💖', '💗', '✨'][Math.floor(Math.random() * 4)];
+        heart.style.left = Math.random() * 100 + '%';
+        heart.style.top = Math.random() * 100 + '%';
+        heart.style.fontSize = (Math.random() * 15 + 8) + 'px';
+        heart.style.animationDelay = (Math.random() * 4) + 's';
+        container.appendChild(heart);
+    }
+}
+
 // Initialize
 createFloatingHearts();
+createCardFloatingHearts();
+initEscapingButton();
 requestAnimationFrame(gameLoop);
 </script>
 </body>
